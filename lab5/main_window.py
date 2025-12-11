@@ -19,6 +19,7 @@ from PyQt5.QtCore import Qt
 
 from lab2_var5 import PathIterator
 
+
 class MainWindow(QMainWindow):
     """
     Главное окно приложения для просмотра изображений из датасета (хранение виджетов интерфейса, итератор путей и текущее изображение)
@@ -33,6 +34,7 @@ class MainWindow(QMainWindow):
         # Итератор по путям и текущее изображение
         self.path_iterator: Optional[PathIterator] = None
         self.current_pixmap: Optional[Iterator[Path]] = None
+        self.current_pixmap: Optional[QPixmap] = None
 
         # Создание интерфейса
         central_widget = QWidget(self)
@@ -63,6 +65,16 @@ class MainWindow(QMainWindow):
         # Статус-бар
         self.statusBar().showMessage("Выберите папку или CSV с путями к изображениям.")
 
+    def reset_dataset(self) -> None:
+        """
+        Сбрасывает состояние текущего датасета: очищает итераторы и изображение на экране
+        """
+        self.path_iterator = None
+        self.paths_iter = None
+        self.current_pixmap = None
+        self.image_label.clear()
+        self.image_label.setText("Здесь будет изображение")
+
     def on_choose_folder(self) -> None:
         """
         Обработка выбора папки с изображениями и создание итератора по этой папке
@@ -71,11 +83,14 @@ class MainWindow(QMainWindow):
         if not folder_path:
             return
 
+        self.reset_dataset()
+
         self.path_iterator = PathIterator(folder_path=Path(folder_path))
         self.paths_iter = iter(self.path_iterator)
         self.statusBar().showMessage(f"Выбрана папка: {folder_path}")
         self.btn_next.setEnabled(True)
         self.show_next_image()
+
 
     def on_choose_csv(self) -> None:
         """
@@ -85,17 +100,21 @@ class MainWindow(QMainWindow):
         if not csv_path:
             return
 
+        self.reset_dataset()
+
         self.path_iterator = PathIterator(csv_path=Path(csv_path))
         self.paths_iter = iter(self.path_iterator)
         self.statusBar().showMessage(f"Выбран CSV-файл: {csv_path}")
         self.btn_next.setEnabled(True)
         self.show_next_image()
 
+
     def on_next_image(self) -> None:
         """
         Обработка нажатия кнопки «Следующее изображение»
         """
         self.show_next_image()
+
 
     def show_next_image(self) -> None:
         """
@@ -131,6 +150,7 @@ class MainWindow(QMainWindow):
         self.update_image_label()
         self.statusBar().showMessage(str(image_path))
 
+
     def update_image_label(self) -> None:
         """
         Масштабирование текущего QPixmap под размер QLabel с сохранением пропорций и установка его на метку
@@ -146,11 +166,13 @@ class MainWindow(QMainWindow):
         )
         self.image_label.setPixmap(scaled)
 
+
     def show_warning(self, text: str) -> None:
         """
         Показ окна предупреждения с указанным текстом
         """
         QMessageBox.warning(self, "Предупреждение", text)
+
 
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         """
@@ -158,6 +180,7 @@ class MainWindow(QMainWindow):
         """
         super().resizeEvent(event)
         self.update_image_label()
+
 
 def create_application() -> QApplication:
     """
@@ -181,6 +204,7 @@ def run_application(app: QApplication, window: MainWindow) -> None:
     """
     window.show()
     app.exec_()
+
 
 def main() -> None:
     """
